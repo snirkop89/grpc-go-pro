@@ -1,0 +1,5 @@
+load("@bazel_gazelle//:def.bzl", "gazelle")
+
+# gazelle:exclude proto/**/*.go
+# gazelle:prefix github.com/snirkop89/grpc-go-pro
+gazelle(name = "gazelle")

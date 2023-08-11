@@ -1,0 +1,5 @@
+# Bazel related dirs
+bazel-bin
+bazel-grpc-go-pro
+bazel-out
+bazel-testlogs
