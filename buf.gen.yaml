@@ -1,0 +1,9 @@
+version: v1
+plugins:
+  - plugin: go
+    out: proto
+    # Generate in the location of the proto file
+    opt: paths=source_relative
+  - plugin: go-grpc
+    out: proto
+    opt: paths=source_relative
