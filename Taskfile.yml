@@ -1,0 +1,19 @@
+version: '3'
+
+tasks:
+  init-folder:
+    cmd: |
+      find . -maxdepth 1 -type d -not -path . -execdir sh -c "pushd {}"; go mod init 'github.com/snirkop89/grpc-go-pro/{}'; popd" " ";"
+
+  protoc:
+    cmd: |
+      protoc --go_out=. \
+             --go_opt=module=github.com/snirkop89/grpc-go-pro \
+             --go-grpc_out=. \
+             --go-grpc_opt=module=github.com/snirkop89/grpc-go-pro \
+             proto/dummy/v1/dummy.proto 
+
+  # Generate proto using buf
+  # First use `buf mod init`
+  buf-gen:
+    cmd: buf generate proto
