@@ -6,7 +6,14 @@ import (
 	"os"
 
 	"google.golang.org/grpc"
+
+	pb "github.com/snirkop89/grpc-go-pro/proto/todo/v1"
 )
+
+type server struct {
+	d db
+	pb.UnimplementedTodoServiceServer
+}
 
 func main() {
 	args := os.Args[1:]
@@ -29,6 +36,7 @@ func main() {
 
 	opts := []grpc.ServerOption{}
 	s := grpc.NewServer(opts...)
+	pb.RegisterTodoServiceServer(s, &server{d: New()})
 	defer s.Stop()
 	// registration of endpoints
 	if err := s.Serve(lis); err != nil {
