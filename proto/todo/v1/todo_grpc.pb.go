@@ -22,6 +22,7 @@ const (
 	TodoService_AddTask_FullMethodName     = "/todo.v1.TodoService/AddTask"
 	TodoService_ListTasks_FullMethodName   = "/todo.v1.TodoService/ListTasks"
 	TodoService_UpdateTasks_FullMethodName = "/todo.v1.TodoService/UpdateTasks"
+	TodoService_DeleteTasks_FullMethodName = "/todo.v1.TodoService/DeleteTasks"
 )
 
 // TodoServiceClient is the client API for TodoService service.
@@ -31,6 +32,7 @@ type TodoServiceClient interface {
 	AddTask(ctx context.Context, in *AddTaskRequest, opts ...grpc.CallOption) (*AddTaskResponse, error)
 	ListTasks(ctx context.Context, in *ListTasksRequest, opts ...grpc.CallOption) (TodoService_ListTasksClient, error)
 	UpdateTasks(ctx context.Context, opts ...grpc.CallOption) (TodoService_UpdateTasksClient, error)
+	DeleteTasks(ctx context.Context, opts ...grpc.CallOption) (TodoService_DeleteTasksClient, error)
 }
 
 type todoServiceClient struct {
@@ -116,6 +118,37 @@ func (x *todoServiceUpdateTasksClient) CloseAndRecv() (*UpdateTaskResponse, erro
 	return m, nil
 }
 
+func (c *todoServiceClient) DeleteTasks(ctx context.Context, opts ...grpc.CallOption) (TodoService_DeleteTasksClient, error) {
+	stream, err := c.cc.NewStream(ctx, &TodoService_ServiceDesc.Streams[2], TodoService_DeleteTasks_FullMethodName, opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &todoServiceDeleteTasksClient{stream}
+	return x, nil
+}
+
+type TodoService_DeleteTasksClient interface {
+	Send(*DeleteTasksRequest) error
+	Recv() (*DeleteTasksResponse, error)
+	grpc.ClientStream
+}
+
+type todoServiceDeleteTasksClient struct {
+	grpc.ClientStream
+}
+
+func (x *todoServiceDeleteTasksClient) Send(m *DeleteTasksRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *todoServiceDeleteTasksClient) Recv() (*DeleteTasksResponse, error) {
+	m := new(DeleteTasksResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // TodoServiceServer is the server API for TodoService service.
 // All implementations must embed UnimplementedTodoServiceServer
 // for forward compatibility
@@ -123,6 +156,7 @@ type TodoServiceServer interface {
 	AddTask(context.Context, *AddTaskRequest) (*AddTaskResponse, error)
 	ListTasks(*ListTasksRequest, TodoService_ListTasksServer) error
 	UpdateTasks(TodoService_UpdateTasksServer) error
+	DeleteTasks(TodoService_DeleteTasksServer) error
 	mustEmbedUnimplementedTodoServiceServer()
 }
 
@@ -138,6 +172,9 @@ func (UnimplementedTodoServiceServer) ListTasks(*ListTasksRequest, TodoService_L
 }
 func (UnimplementedTodoServiceServer) UpdateTasks(TodoService_UpdateTasksServer) error {
 	return status.Errorf(codes.Unimplemented, "method UpdateTasks not implemented")
+}
+func (UnimplementedTodoServiceServer) DeleteTasks(TodoService_DeleteTasksServer) error {
+	return status.Errorf(codes.Unimplemented, "method DeleteTasks not implemented")
 }
 func (UnimplementedTodoServiceServer) mustEmbedUnimplementedTodoServiceServer() {}
 
@@ -217,6 +254,32 @@ func (x *todoServiceUpdateTasksServer) Recv() (*UpdateTasksRequest, error) {
 	return m, nil
 }
 
+func _TodoService_DeleteTasks_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(TodoServiceServer).DeleteTasks(&todoServiceDeleteTasksServer{stream})
+}
+
+type TodoService_DeleteTasksServer interface {
+	Send(*DeleteTasksResponse) error
+	Recv() (*DeleteTasksRequest, error)
+	grpc.ServerStream
+}
+
+type todoServiceDeleteTasksServer struct {
+	grpc.ServerStream
+}
+
+func (x *todoServiceDeleteTasksServer) Send(m *DeleteTasksResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *todoServiceDeleteTasksServer) Recv() (*DeleteTasksRequest, error) {
+	m := new(DeleteTasksRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // TodoService_ServiceDesc is the grpc.ServiceDesc for TodoService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -238,6 +301,12 @@ var TodoService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "UpdateTasks",
 			Handler:       _TodoService_UpdateTasks_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "DeleteTasks",
+			Handler:       _TodoService_DeleteTasks_Handler,
+			ServerStreams: true,
 			ClientStreams: true,
 		},
 	},

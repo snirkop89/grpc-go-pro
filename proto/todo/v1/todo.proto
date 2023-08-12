@@ -34,8 +34,15 @@ message UpdateTasksRequest {
 
 message UpdateTaskResponse {}
 
+message DeleteTasksRequest {
+    uint64 id = 1;
+}
+
+message DeleteTasksResponse {}
+
 service TodoService {
     rpc AddTask(AddTaskRequest) returns (AddTaskResponse);
     rpc ListTasks(ListTasksRequest) returns (stream ListTasksResponse);
     rpc UpdateTasks(stream UpdateTasksRequest) returns (UpdateTaskResponse);
+    rpc DeleteTasks(stream DeleteTasksRequest) returns (stream DeleteTasksResponse);
 }
