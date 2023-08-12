@@ -19,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	TodoService_AddTask_FullMethodName   = "/todo.v1.TodoService/AddTask"
-	TodoService_ListTasks_FullMethodName = "/todo.v1.TodoService/ListTasks"
+	TodoService_AddTask_FullMethodName     = "/todo.v1.TodoService/AddTask"
+	TodoService_ListTasks_FullMethodName   = "/todo.v1.TodoService/ListTasks"
+	TodoService_UpdateTasks_FullMethodName = "/todo.v1.TodoService/UpdateTasks"
 )
 
 // TodoServiceClient is the client API for TodoService service.
@@ -29,6 +30,7 @@ const (
 type TodoServiceClient interface {
 	AddTask(ctx context.Context, in *AddTaskRequest, opts ...grpc.CallOption) (*AddTaskResponse, error)
 	ListTasks(ctx context.Context, in *ListTasksRequest, opts ...grpc.CallOption) (TodoService_ListTasksClient, error)
+	UpdateTasks(ctx context.Context, opts ...grpc.CallOption) (TodoService_UpdateTasksClient, error)
 }
 
 type todoServiceClient struct {
@@ -80,12 +82,47 @@ func (x *todoServiceListTasksClient) Recv() (*ListTasksResponse, error) {
 	return m, nil
 }
 
+func (c *todoServiceClient) UpdateTasks(ctx context.Context, opts ...grpc.CallOption) (TodoService_UpdateTasksClient, error) {
+	stream, err := c.cc.NewStream(ctx, &TodoService_ServiceDesc.Streams[1], TodoService_UpdateTasks_FullMethodName, opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &todoServiceUpdateTasksClient{stream}
+	return x, nil
+}
+
+type TodoService_UpdateTasksClient interface {
+	Send(*UpdateTasksRequest) error
+	CloseAndRecv() (*UpdateTaskResponse, error)
+	grpc.ClientStream
+}
+
+type todoServiceUpdateTasksClient struct {
+	grpc.ClientStream
+}
+
+func (x *todoServiceUpdateTasksClient) Send(m *UpdateTasksRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *todoServiceUpdateTasksClient) CloseAndRecv() (*UpdateTaskResponse, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(UpdateTaskResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // TodoServiceServer is the server API for TodoService service.
 // All implementations must embed UnimplementedTodoServiceServer
 // for forward compatibility
 type TodoServiceServer interface {
 	AddTask(context.Context, *AddTaskRequest) (*AddTaskResponse, error)
 	ListTasks(*ListTasksRequest, TodoService_ListTasksServer) error
+	UpdateTasks(TodoService_UpdateTasksServer) error
 	mustEmbedUnimplementedTodoServiceServer()
 }
 
@@ -98,6 +135,9 @@ func (UnimplementedTodoServiceServer) AddTask(context.Context, *AddTaskRequest) 
 }
 func (UnimplementedTodoServiceServer) ListTasks(*ListTasksRequest, TodoService_ListTasksServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListTasks not implemented")
+}
+func (UnimplementedTodoServiceServer) UpdateTasks(TodoService_UpdateTasksServer) error {
+	return status.Errorf(codes.Unimplemented, "method UpdateTasks not implemented")
 }
 func (UnimplementedTodoServiceServer) mustEmbedUnimplementedTodoServiceServer() {}
 
@@ -151,6 +191,32 @@ func (x *todoServiceListTasksServer) Send(m *ListTasksResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _TodoService_UpdateTasks_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(TodoServiceServer).UpdateTasks(&todoServiceUpdateTasksServer{stream})
+}
+
+type TodoService_UpdateTasksServer interface {
+	SendAndClose(*UpdateTaskResponse) error
+	Recv() (*UpdateTasksRequest, error)
+	grpc.ServerStream
+}
+
+type todoServiceUpdateTasksServer struct {
+	grpc.ServerStream
+}
+
+func (x *todoServiceUpdateTasksServer) SendAndClose(m *UpdateTaskResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *todoServiceUpdateTasksServer) Recv() (*UpdateTasksRequest, error) {
+	m := new(UpdateTasksRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // TodoService_ServiceDesc is the grpc.ServiceDesc for TodoService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -168,6 +234,11 @@ var TodoService_ServiceDesc = grpc.ServiceDesc{
 			StreamName:    "ListTasks",
 			Handler:       _TodoService_ListTasks_Handler,
 			ServerStreams: true,
+		},
+		{
+			StreamName:    "UpdateTasks",
+			Handler:       _TodoService_UpdateTasks_Handler,
+			ClientStreams: true,
 		},
 	},
 	Metadata: "todo/v1/todo.proto",
