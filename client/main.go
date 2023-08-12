@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"time"
@@ -27,16 +28,25 @@ func main() {
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
-	c := pb.NewTodoServiceClient(conn)
-	fmt.Println("-----ADD-----")
-	dueDate := time.Now().Add(5 * time.Second)
-	addTask(c, "This ia a task", dueDate)
-	fmt.Println("-------------")
 	defer func(conn *grpc.ClientConn) {
 		if err := conn.Close(); err != nil {
 			log.Fatalf("unexpected error: %v", err)
 		}
 	}(conn)
+	c := pb.NewTodoServiceClient(conn)
+
+	fmt.Println("-----ADD-----")
+	dueDate := time.Now().Add(5 * time.Second)
+	addTask(c, "This ia a task", dueDate)
+	dueDate = time.Now().Add(15 * time.Second)
+	addTask(c, "This ia task #2", dueDate)
+	dueDate = time.Now().Add(-15 * time.Second)
+	addTask(c, "This is overdue", dueDate)
+	fmt.Println("-------------")
+
+	fmt.Println("-----List----")
+	printTasks(c)
+	fmt.Println("-------------")
 }
 
 func addTask(c pb.TodoServiceClient, description string, dueDate time.Time) uint64 {
@@ -50,4 +60,22 @@ func addTask(c pb.TodoServiceClient, description string, dueDate time.Time) uint
 	}
 	fmt.Printf("added task: %d\n", res.Id)
 	return res.Id
+}
+
+func printTasks(c pb.TodoServiceClient) {
+	req := &pb.ListTasksRequest{}
+	stream, err := c.ListTasks(context.Background(), req)
+	if err != nil {
+		log.Fatalf("unexpected error: %v\n", err)
+	}
+	for {
+		res, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatalf("unexpected error: %v", err)
+		}
+		fmt.Println(res.Task.String(), "overdue: ", res.Overdue)
+	}
 }

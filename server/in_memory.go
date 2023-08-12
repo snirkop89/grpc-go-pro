@@ -25,3 +25,12 @@ func (d *inMemoryDB) addTask(description string, dueDate time.Time) (uint64, err
 	d.tasks = append(d.tasks, task)
 	return nextID, nil
 }
+
+func (d *inMemoryDB) getTasks(f func(any) error) error {
+	for _, task := range d.tasks {
+		if err := f(task); err != nil {
+			return err
+		}
+	}
+	return nil
+}
