@@ -31,3 +31,7 @@ tasks:
 
   server:
     cmd: go run ./server/ 0.0.0.0:50051
+
+  
+  client:
+    cmd: go run ./client/ 0.0.0.0:50051
