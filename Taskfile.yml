@@ -27,3 +27,7 @@ tasks:
 
   bazel:
     cmd: bazel run //:gazelle
+
+
+  server:
+    cmd: go run ./server/ 0.0.0.0:50051
