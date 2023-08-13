@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"io"
+	"log"
 	"time"
 
 	pb "github.com/snirkop89/grpc-go-pro/proto/todo/v1"
+	"google.golang.org/protobuf/proto"
 )
 
 func (s *server) AddTask(ctx context.Context, in *pb.AddTaskRequest) (*pb.AddTaskResponse, error) {
@@ -30,14 +32,18 @@ func (s *server) ListTasks(req *pb.ListTasksRequest, stream pb.TodoService_ListT
 }
 
 func (s *server) UpdateTasks(stream pb.TodoService_UpdateTasksServer) error {
+	totalLength := 0
 	for {
 		req, err := stream.Recv()
 		if err == io.EOF {
+			log.Println("TOTAL:", totalLength)
 			return stream.SendAndClose(&pb.UpdateTaskResponse{})
 		}
 		if err != nil {
 			return err
 		}
+		out, _ := proto.Marshal(req)
+		totalLength += len(out)
 		s.d.updateTask(
 			req.Task.Id,
 			req.Task.Description,
