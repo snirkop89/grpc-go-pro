@@ -32,6 +32,11 @@ tasks:
   server:
     cmd: go run ./server/ 0.0.0.0:50051
 
-  
   client:
     cmd: go run ./client/ 0.0.0.0:50051
+
+  kind-up:
+    cmd: kind create cluster --config k8s/kind.yaml --name grpc
+
+  kind-down:
+    cmd: kind delete cluster --name grpc

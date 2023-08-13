@@ -8,6 +8,8 @@ import (
 
 	pb "github.com/snirkop89/grpc-go-pro/proto/todo/v2"
 	"golang.org/x/exp/slices"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
@@ -27,9 +29,15 @@ func Filter(msg proto.Message, mask *fieldmaskpb.FieldMask) {
 }
 
 func (s *server) AddTask(ctx context.Context, in *pb.AddTaskRequest) (*pb.AddTaskResponse, error) {
+	if len(in.Description) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "expected a task description, got an empty string")
+	}
+	if in.DueDate.AsTime().Before(time.Now().UTC()) {
+		return nil, status.Error(codes.InvalidArgument, "expected a task due_date that is in the future")
+	}
 	id, err := s.d.addTask(in.Description, in.DueDate.AsTime())
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "unexpected error: %s", err.Error())
 	}
 	return &pb.AddTaskResponse{Id: id}, nil
 }
