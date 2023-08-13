@@ -7,7 +7,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	pb "github.com/snirkop89/grpc-go-pro/proto/todo/v1"
+	pb "github.com/snirkop89/grpc-go-pro/proto/todo/v2"
 )
 
 type server struct {
