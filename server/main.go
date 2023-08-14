@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	pb "github.com/snirkop89/grpc-go-pro/proto/todo/v2"
 )
@@ -34,7 +35,13 @@ func main() {
 
 	log.Printf("listening at %s\n", addr)
 
+	creds, err := credentials.NewServerTLSFromFile("./certs/server_cert.pem", "./certs/server_key.pem")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	opts := []grpc.ServerOption{
+		grpc.Creds(creds),
 		grpc.UnaryInterceptor(unaryAuthInterceptor),
 		grpc.StreamInterceptor(streamAuthInterceptor),
 	}

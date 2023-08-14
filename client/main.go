@@ -11,8 +11,7 @@ import (
 	pb "github.com/snirkop89/grpc-go-pro/proto/todo/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/encoding/gzip"
+	"google.golang.org/grpc/credentials"
 	_ "google.golang.org/grpc/encoding/gzip"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -27,11 +26,17 @@ func main() {
 	}
 	addr := args[0]
 
+	creds, err := credentials.NewClientTLSFromFile("./certs/ca_cert.pem", "x.test.example.com")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	opts := []grpc.DialOption{
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithTransportCredentials(creds),
+		// grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithUnaryInterceptor(unaryAuthInterceptor),
 		grpc.WithStreamInterceptor(streamAuthInterceptor),
-		grpc.WithDefaultCallOptions(grpc.UseCompressor(gzip.Name)),
+		// grpc.WithDefaultCallOptions(grpc.UseCompressor(gzip.Name)),
 	}
 	conn, err := grpc.Dial(addr, opts...)
 	if err != nil {
