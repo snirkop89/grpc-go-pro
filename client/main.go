@@ -39,11 +39,11 @@ func main() {
 	c := pb.NewTodoServiceClient(conn)
 
 	fmt.Println("-----ADD-----")
-	dueDate := time.Now().Add(5 * time.Second)
+	dueDate := time.Now().Add(200 * time.Millisecond)
 	id1 := addTask(c, "This ia a task", dueDate)
 	dueDate = time.Now().Add(15 * time.Second)
 	id2 := addTask(c, "This ia task #2", dueDate)
-	dueDate = time.Now().Add(-15 * time.Second)
+	dueDate = time.Now().Add(15 * time.Second)
 	id3 := addTask(c, "This is overdue", dueDate)
 	fmt.Println("-------------")
 
@@ -74,7 +74,7 @@ func main() {
 
 	fmt.Println("-----Error----")
 	// addTask(c, "", dueDate)
-	addTask(c, "not empty", time.Now().Add(-5*time.Second))
+	// addTask(c, "not empty", time.Now().Add(-5*time.Second))
 	fmt.Println("-------------")
 }
 
@@ -101,10 +101,12 @@ func addTask(c pb.TodoServiceClient, description string, dueDate time.Time) uint
 }
 
 func printTasks(c pb.TodoServiceClient, fm *fieldmaskpb.FieldMask) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
 	req := &pb.ListTasksRequest{
 		Mask: fm,
 	}
-	stream, err := c.ListTasks(context.Background(), req)
+	stream, err := c.ListTasks(ctx, req)
 	if err != nil {
 		log.Fatalf("unexpected error: %v\n", err)
 	}
@@ -115,6 +117,10 @@ func printTasks(c pb.TodoServiceClient, fm *fieldmaskpb.FieldMask) {
 		}
 		if err != nil {
 			log.Fatalf("unexpected error: %v", err)
+		}
+		if res.Overdue {
+			log.Printf("CANCEL called")
+			cancel()
 		}
 		fmt.Println(res.Task.String(), "overdue: ", res.Overdue)
 	}

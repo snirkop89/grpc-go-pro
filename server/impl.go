@@ -35,6 +35,7 @@ func (s *server) AddTask(ctx context.Context, in *pb.AddTaskRequest) (*pb.AddTas
 	if in.DueDate.AsTime().Before(time.Now().UTC()) {
 		return nil, status.Error(codes.InvalidArgument, "expected a task due_date that is in the future")
 	}
+	log.Println("got duedate:", in.DueDate.AsTime())
 	id, err := s.d.addTask(in.Description, in.DueDate.AsTime())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "unexpected error: %s", err.Error())
@@ -43,11 +44,29 @@ func (s *server) AddTask(ctx context.Context, in *pb.AddTaskRequest) (*pb.AddTas
 }
 
 func (s *server) ListTasks(req *pb.ListTasksRequest, stream pb.TodoService_ListTasksServer) error {
+	ctx := stream.Context()
 	return s.d.getTasks(func(a any) error {
+		select {
+		case <-ctx.Done():
+			switch ctx.Err() {
+			case context.Canceled:
+				log.Printf("request canceled: %s", ctx.Err())
+			case context.DeadlineExceeded:
+				log.Printf("req deadline exeeded: %s", ctx.Err())
+			default:
+			}
+			return ctx.Err()
+		case <-time.After(200 * time.Millisecond):
+		}
+		// TODO: replace following case by default: on production API
 		task := a.(*pb.Task)
 		Filter(task, req.Mask)
-		overdue := task.DueDate != nil && !task.Done &&
-			task.DueDate.AsTime().Before(time.Now().UTC())
+		log.Println("TASK: ", task)
+		log.Println("due date:", task.DueDate != nil)
+		log.Println("!done:", !task.Done)
+		log.Println("before:", task.DueDate.AsTime().Before(time.Now().UTC()))
+		overdue := task.DueDate != nil && !task.Done && task.DueDate.AsTime().After(time.Now().UTC())
+		log.Println("OVERDUE:", overdue)
 		err := stream.Send(&pb.ListTasksResponse{
 			Task:    task,
 			Overdue: overdue,
