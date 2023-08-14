@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: todo-client
+spec:
+  containers:
+  - name: todo-client
+    args:
+      - dns:///todo-server.default.svc.cluster.local:50051
+    image: grpc-todo-client:1.0.0
+    imagePullPolicy: IfNotPresent
+  restartPolicy: Always

@@ -42,8 +42,8 @@ func main() {
 
 	opts := []grpc.ServerOption{
 		grpc.Creds(creds),
-		grpc.UnaryInterceptor(unaryAuthInterceptor),
-		grpc.StreamInterceptor(streamAuthInterceptor),
+		grpc.ChainUnaryInterceptor(unaryAuthInterceptor, unaryLogInterceptor),
+		grpc.ChainStreamInterceptor(streamAuthInterceptor, streamLogInterceptor),
 	}
 	s := grpc.NewServer(opts...)
 	pb.RegisterTodoServiceServer(s, &server{d: New()})

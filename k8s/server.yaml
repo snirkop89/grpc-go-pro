@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-server
+spec:
+  selector:
+    app: todo-server
+  clusterIP: None
+  ports:
+    - name: grpc
+      port: 50051
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-server
+  labels:
+    app: todo-server
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: todo-server
+  template:
+    metadata:
+      labels:
+        app: todo-server
+    spec:
+      containers:
+      - name: todo-server
+        image: grpc-todo-server:1.0.0
+        imagePullPolicy: IfNotPresent
+        args:
+        - 0.0.0.0:50051
+        ports:
+        - name: grpc
+          containerPort: 50051

@@ -1,5 +1,10 @@
 version: '3'
 
+vars:
+  CLIENT_DOCKER: grpc-todo-client
+  SERVER_DOCKER: grpc-todo-server
+  DOCKER_TAG: 1.0.0
+
 tasks:
   init-folder:
     cmd: |
@@ -28,15 +33,32 @@ tasks:
   bazel:
     cmd: bazel run //:gazelle
 
-
   server:
     cmd: go run ./server/ 0.0.0.0:50051
 
   client:
-    cmd: go run ./client/ 0.0.0.0:50051
+    cmd: go run ./client/ dns:///$HOSTNAME:50051
+
+  build-server:
+    cmd: docker build -f ./server/Dockerfile -t {{.SERVER_DOCKER}}:{{.DOCKER_TAG}} .
+
+  build-client:
+    cmd: docker build -f ./client/Dockerfile -t {{.CLIENT_DOCKER}}:{{.DOCKER_TAG}} .
 
   kind-up:
     cmd: kind create cluster --config k8s/kind.yaml --name grpc
 
   kind-down:
     cmd: kind delete cluster --name grpc
+
+  kind-load:
+    cmds: 
+    - kind load docker-image "{{.CLIENT_DOCKER}}:{{.DOCKER_TAG}}"  "{{.SERVER_DOCKER}}:{{.DOCKER_TAG}}" --name grpc
+
+  deploy:
+    cmds:
+    - kubectl apply -f ./k8s/server.yaml -f ./k8s/client.yaml
+
+  uninstall:
+    cmds:
+    - kubectl delete -f ./k8s/server.yaml -f ./k8s/client.yaml

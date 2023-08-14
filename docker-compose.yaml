@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  server1:
+    image: grpc-todo-server
+    expose:
+      - 50051
+    command: 
+    - 0.0.0.0:50051
+  server2:
+    image: grpc-todo-server
+    expose:
+      - 50051
+    command: 
+    - 0.0.0.0:50051
+  server3:
+    image: grpc-todo-server
+    expose:
+      - 50051
+    command: 
+    - 0.0.0.0:50051
+  client:
+    depends_on:
+      - server1
+      - server2
+      - server3
+    image: grpc-todo-client
+    command: 
+    - dns:///${HOSTNAME}:50051
