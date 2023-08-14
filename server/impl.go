@@ -9,7 +9,6 @@ import (
 	pb "github.com/snirkop89/grpc-go-pro/proto/todo/v2"
 	"golang.org/x/exp/slices"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -77,18 +76,6 @@ func (s *server) ListTasks(req *pb.ListTasksRequest, stream pb.TodoService_ListT
 }
 
 func (s *server) UpdateTasks(stream pb.TodoService_UpdateTasksServer) error {
-	ctx := stream.Context()
-	md, _ := metadata.FromIncomingContext(ctx)
-	if t, ok := md["auth_token"]; ok {
-		switch {
-		case len(t) != 1:
-			return status.Errorf(codes.InvalidArgument, "auth_token should contain only 1 value")
-		case t[0] != "authd":
-			return status.Errorf(codes.Unauthenticated, "incorrect auth_token")
-		}
-	} else {
-		return status.Errorf(codes.Unauthenticated, "failed to get auth token")
-	}
 	totalLength := 0
 	for {
 		req, err := stream.Recv()

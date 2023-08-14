@@ -27,6 +27,8 @@ func main() {
 
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(unaryAuthInterceptor),
+		grpc.WithStreamInterceptor(streamAuthInterceptor),
 	}
 	conn, err := grpc.Dial(addr, opts...)
 	if err != nil {

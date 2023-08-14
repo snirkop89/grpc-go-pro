@@ -34,7 +34,10 @@ func main() {
 
 	log.Printf("listening at %s\n", addr)
 
-	opts := []grpc.ServerOption{}
+	opts := []grpc.ServerOption{
+		grpc.UnaryInterceptor(unaryAuthInterceptor),
+		grpc.StreamInterceptor(streamAuthInterceptor),
+	}
 	s := grpc.NewServer(opts...)
 	pb.RegisterTodoServiceServer(s, &server{d: New()})
 	defer s.Stop()
