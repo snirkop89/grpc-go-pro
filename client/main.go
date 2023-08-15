@@ -13,7 +13,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	_ "google.golang.org/grpc/encoding/gzip"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -73,19 +72,19 @@ func main() {
 		{Id: id2, DueDate: timestamppb.New(dueDate.Add(5 * time.Hour))},
 		{Id: id3, Done: true},
 	}...)
-	printTasks(c, fm)
+	// printTasks(c, fm)
 	fmt.Println("-------------")
 
-	fmt.Println("-----Delete----")
-	deleteTasks(c, []*pb.DeleteTasksRequest{
-		{Id: id1},
-		{Id: id2},
-		{Id: id3},
-	}...)
-	fmt.Println("-------------")
+	// fmt.Println("-----Delete----")
+	// deleteTasks(c, []*pb.DeleteTasksRequest{
+	// 	{Id: id1},
+	// 	{Id: id2},
+	// 	{Id: id3},
+	// }...)
+	// fmt.Println("-------------")
 
 	fmt.Println("-----Error----")
-	// addTask(c, "", dueDate)
+	addTask(c, "", dueDate)
 	// addTask(c, "not empty", time.Now().Add(-5*time.Second))
 	fmt.Println("-------------")
 }
@@ -141,7 +140,7 @@ func printTasks(c pb.TodoServiceClient, fm *fieldmaskpb.FieldMask) {
 func updateTasks(c pb.TodoServiceClient, reqs ...*pb.UpdateTasksRequest) {
 	ctx := context.Background()
 	// change "authd" to anything else to see the error
-	ctx = metadata.AppendToOutgoingContext(ctx, "auth_token", "authd")
+	// ctx = metadata.AppendToOutgoingContext(ctx, "auth_token", "authd")
 	stream, err := c.UpdateTasks(ctx)
 	if err != nil {
 		log.Fatalf("unexpected error: %v", err)

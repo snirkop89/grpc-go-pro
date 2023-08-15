@@ -4,6 +4,7 @@ package todo.v2;
 
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
 
 option go_package = "github.com/PacktPublishing/gRPC-Go-for-Professionals/proto/todo/v2";
 
@@ -15,8 +16,12 @@ message Task {
 }
 
 message AddTaskRequest {
-  string description = 1;
-  google.protobuf.Timestamp due_date = 2;
+  string description = 1 [
+    (validate.rules).string.min_len = 1
+  ];
+  google.protobuf.Timestamp due_date = 2 [
+    (validate.rules).timestamp.gt_now = true
+  ];
 }
 
 message AddTaskResponse {

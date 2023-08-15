@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"google.golang.org/grpc"
@@ -43,6 +44,7 @@ func validateAuthToken(ctx context.Context) error {
 	if t, ok := md["auth_token"]; ok {
 		switch {
 		case len(t) != 1:
+			fmt.Printf("token: %v\n", t)
 			return status.Errorf(codes.InvalidArgument, "auth_token should contain only 1 value")
 		case t[0] != "authd":
 			return status.Errorf(codes.Unauthenticated, "incorrect auth_token")
