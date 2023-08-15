@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/credentials"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/auth"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	pb "github.com/snirkop89/grpc-go-pro/proto/todo/v2"
 )
 
@@ -36,6 +37,8 @@ func main() {
 
 	log.Printf("listening at %s\n", addr)
 
+	logger := log.New(os.Stderr, "", log.Ldate|log.Ltime)
+
 	creds, err := credentials.NewServerTLSFromFile("./certs/server_cert.pem", "./certs/server_key.pem")
 	if err != nil {
 		log.Fatal(err)
@@ -43,8 +46,14 @@ func main() {
 
 	opts := []grpc.ServerOption{
 		grpc.Creds(creds),
-		grpc.ChainUnaryInterceptor(auth.UnaryServerInterceptor(validateAuthToken), unaryLogInterceptor),
-		grpc.ChainStreamInterceptor(auth.StreamServerInterceptor(validateAuthToken), streamLogInterceptor),
+		grpc.ChainUnaryInterceptor(
+			auth.UnaryServerInterceptor(validateAuthToken),
+			logging.UnaryServerInterceptor(logCalls(logger)),
+		),
+		grpc.ChainStreamInterceptor(
+			auth.StreamServerInterceptor(validateAuthToken),
+			logging.StreamServerInterceptor(logCalls(logger)),
+		),
 	}
 	s := grpc.NewServer(opts...)
 	pb.RegisterTodoServiceServer(s, &server{d: New()})
