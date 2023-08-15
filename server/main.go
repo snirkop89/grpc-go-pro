@@ -14,9 +14,13 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
+	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/auth"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	pb "github.com/snirkop89/grpc-go-pro/proto/todo/v2"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 )
 
 type server struct {
@@ -44,7 +48,14 @@ func main() {
 
 	g, ctx := errgroup.WithContext(ctx)
 
-	grpcSrv, err := newGrpcServer(lis)
+	srvMetrics := grpcprom.NewServerMetrics(
+		grpcprom.WithServerHandlingTimeHistogram(
+			grpcprom.WithHistogramBuckets([]float64{0.001, 0.01,
+				0.1, 0.3, 0.6, 1, 3, 6, 9, 20, 30, 60, 90, 120}),
+		),
+	)
+
+	grpcSrv, err := newGrpcServer(lis, srvMetrics)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -57,7 +68,11 @@ func main() {
 		log.Println("gRPC server shutdown")
 		return nil
 	})
-	metricsServer := newMetricsServer(httpAddr)
+
+	reg := prometheus.NewRegistry()
+	reg.MustRegister(srvMetrics)
+
+	metricsServer := newMetricsServer(httpAddr, reg)
 	g.Go(func() error {
 		log.Printf("metrics server listening at %s\n", httpAddr)
 		if err := metricsServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -80,15 +95,16 @@ func main() {
 	}
 }
 
-func newMetricsServer(httpAddr string) *http.Server {
+func newMetricsServer(httpAddr string, reg *prometheus.Registry) *http.Server {
 	m := http.NewServeMux()
+	m.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
 	return &http.Server{
 		Addr:    httpAddr,
 		Handler: m,
 	}
 }
 
-func newGrpcServer(lis net.Listener) (*grpc.Server, error) {
+func newGrpcServer(lis net.Listener, srvMetrics *grpcprom.ServerMetrics) (*grpc.Server, error) {
 	logger := log.New(os.Stderr, "", log.Ldate|log.Ltime)
 
 	creds, err := credentials.NewServerTLSFromFile("./certs/server_cert.pem", "./certs/server_key.pem")
@@ -99,10 +115,14 @@ func newGrpcServer(lis net.Listener) (*grpc.Server, error) {
 	opts := []grpc.ServerOption{
 		grpc.Creds(creds),
 		grpc.ChainUnaryInterceptor(
+			otelgrpc.UnaryServerInterceptor(),
+			srvMetrics.UnaryServerInterceptor(),
 			auth.UnaryServerInterceptor(validateAuthToken),
 			logging.UnaryServerInterceptor(logCalls(logger)),
 		),
 		grpc.ChainStreamInterceptor(
+			otelgrpc.StreamServerInterceptor(),
+			srvMetrics.StreamServerInterceptor(),
 			auth.StreamServerInterceptor(validateAuthToken),
 			logging.StreamServerInterceptor(logCalls(logger)),
 		),

@@ -15,6 +15,7 @@ tasks:
     - cd proto && go mod tidy
     - cd client && go mod tidy
     - cd server && go mod tidy
+    - go work sync
 
 
   protoc:
