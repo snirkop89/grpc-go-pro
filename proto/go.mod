@@ -3,6 +3,7 @@ module github.com/snirkop89/grpc-go-pro/proto
 go 1.20
 
 require (
+	github.com/envoyproxy/protoc-gen-validate v0.10.1
 	google.golang.org/grpc v1.57.0
 	google.golang.org/protobuf v1.31.0
 )

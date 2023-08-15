@@ -75,16 +75,16 @@ func main() {
 	// printTasks(c, fm)
 	fmt.Println("-------------")
 
-	// fmt.Println("-----Delete----")
-	// deleteTasks(c, []*pb.DeleteTasksRequest{
-	// 	{Id: id1},
-	// 	{Id: id2},
-	// 	{Id: id3},
-	// }...)
-	// fmt.Println("-------------")
+	fmt.Println("-----Delete----")
+	deleteTasks(c, []*pb.DeleteTasksRequest{
+		{Id: id1},
+		{Id: id2},
+		{Id: id3},
+	}...)
+	fmt.Println("-------------")
 
 	fmt.Println("-----Error----")
-	addTask(c, "", dueDate)
+	// addTask(c, "", dueDate)
 	// addTask(c, "not empty", time.Now().Add(-5*time.Second))
 	fmt.Println("-------------")
 }

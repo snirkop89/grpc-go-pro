@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/auth"
 	pb "github.com/snirkop89/grpc-go-pro/proto/todo/v2"
 )
 
@@ -42,8 +43,8 @@ func main() {
 
 	opts := []grpc.ServerOption{
 		grpc.Creds(creds),
-		grpc.ChainUnaryInterceptor(unaryAuthInterceptor, unaryLogInterceptor),
-		grpc.ChainStreamInterceptor(streamAuthInterceptor, streamLogInterceptor),
+		grpc.ChainUnaryInterceptor(auth.UnaryServerInterceptor(validateAuthToken), unaryLogInterceptor),
+		grpc.ChainStreamInterceptor(auth.StreamServerInterceptor(validateAuthToken), streamLogInterceptor),
 	}
 	s := grpc.NewServer(opts...)
 	pb.RegisterTodoServiceServer(s, &server{d: New()})
