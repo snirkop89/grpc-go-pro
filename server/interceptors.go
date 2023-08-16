@@ -6,7 +6,6 @@ import (
 	"log"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -19,15 +18,6 @@ const (
 	grpcMethod            = 7
 )
 
-func unaryLogInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
-	log.Println(info.FullMethod, "called")
-	return handler(ctx, req)
-}
-
-func streamLogInterceptor(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-	log.Println(info.FullMethod, "called")
-	return handler(srv, ss)
-}
 func validateAuthToken(ctx context.Context) (context.Context, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"golang.org/x/time/rate"
 )
@@ -12,8 +11,8 @@ type simpleLimiter struct {
 }
 
 func (l *simpleLimiter) Limit(_ context.Context) error {
-	if !l.limiter.Allow() {
-		return fmt.Errorf("reached rate-limiting %v", l.limiter.Limit())
-	}
+	// if !l.limiter.Allow() {
+	// 	return fmt.Errorf("reached rate-limiting %v", l.limiter.Limit())
+	// }
 	return nil
 }

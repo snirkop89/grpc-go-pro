@@ -47,6 +47,20 @@ tasks:
   build-client:
     cmd: docker build -f ./client/Dockerfile -t {{.CLIENT_DOCKER}}:{{.DOCKER_TAG}} .
 
+# Load tests. Disable rate limiting interceptors before using.
+  ghz:
+    cmd: |
+      ghz --proto ./proto/todo/v2/todo.proto \
+          --import-paths=proto \
+          --call todo.v2.TodoService.AddTask \
+          --data '{"description":"task"}' \
+          --cacert ./certs/ca_cert.pem \
+          --cname "check.test.example.com" \
+          --metadata '{"auth_token":"authd"}' \
+          0.0.0.0:50051
+
+
+# Kind commands
   kind-up:
     cmd: kind create cluster --config k8s/kind.yaml --name grpc
 
