@@ -41,7 +41,7 @@ WORKDIR /go/src/server
 COPY ./server .
 
 # download dependencies and build
-RUN go mod download
+RUN go mod download && go get github.com/snirkop89/grpc-go-pro/proto/todo/v2
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags="-s -w" -o /go/bin/server
 
 FROM scratch
