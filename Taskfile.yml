@@ -42,10 +42,16 @@ tasks:
     cmd: go run ./client/ dns:///$HOSTNAME:50051
 
   build-server:
-    cmd: docker build -f ./server/Dockerfile -t {{.SERVER_DOCKER}}:{{.DOCKER_TAG}} .
+    cmds: 
+    # - docker buildx create --name mybuild --driver=docker-container
+    - docker buildx build --tag snirkop89/grpc-go-pro:server --file server/Dockerfile --platform linux/arm64 --builder mybuild --load .
+
 
   build-client:
     cmd: docker build -f ./client/Dockerfile -t {{.CLIENT_DOCKER}}:{{.DOCKER_TAG}} .
+  
+  run-docker:
+    cmd: docker run -p 50051:50051 -p 50052:50052 snirkop89/grpc-go-pro:server
 
 # Load tests. Disable rate limiting interceptors before using.
   ghz:
